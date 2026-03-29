@@ -5,7 +5,7 @@ Rotating proxy network on Cloudflare Workers. Deploy, rotate, fire.
 Turn Cloudflare's free tier into a rotating proxy network. Deploy N Workers, each exits through a different IP. Use as a drop-in `fetch`, local proxy server, or CLI. 100k requests/day free.
 
 ```bash
-npm install -g flaregun
+npm install -g @miclivs/flaregun
 ```
 
 ## Quick Start

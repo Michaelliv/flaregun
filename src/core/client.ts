@@ -129,13 +129,19 @@ export class CloudflareClient {
   }
 
   /** Deploy N workers, returns all deployed workers */
-  async deployMany(count: number): Promise<WorkerInfo[]> {
+  async deployMany(
+    count: number,
+    onProgress?: (current: number, total: number, name: string) => void,
+  ): Promise<WorkerInfo[]> {
     const existing = await this.listWorkers();
     const existingCount = existing.length;
     const workers: WorkerInfo[] = [...existing];
 
-    for (let i = existingCount; i < existingCount + count; i++) {
-      const worker = await this.deployWorker(i);
+    for (let i = 0; i < count; i++) {
+      const index = existingCount + i;
+      const name = this.workerName(index);
+      onProgress?.(i + 1, count, name);
+      const worker = await this.deployWorker(index);
       workers.push(worker);
     }
 
@@ -143,22 +149,23 @@ export class CloudflareClient {
   }
 
   /** Scale to exactly N workers — adds or removes as needed */
-  async scaleTo(target: number): Promise<WorkerInfo[]> {
+  async scaleTo(
+    target: number,
+    onProgress?: (current: number, total: number, name: string) => void,
+  ): Promise<WorkerInfo[]> {
     const existing = await this.listWorkers();
     const current = existing.length;
 
     if (target > current) {
-      // Scale up
       const toAdd = target - current;
-      const newWorkers = await this.deployMany(toAdd);
-      return newWorkers;
+      return this.deployMany(toAdd, onProgress);
     }
 
     if (target < current) {
-      // Scale down — remove from the end
       const toRemove = existing.slice(target);
-      for (const w of toRemove) {
-        await this.deleteWorker(w.name);
+      for (let i = 0; i < toRemove.length; i++) {
+        onProgress?.(i + 1, toRemove.length, toRemove[i].name);
+        await this.deleteWorker(toRemove[i].name);
       }
       return existing.slice(0, target);
     }
@@ -167,10 +174,13 @@ export class CloudflareClient {
   }
 
   /** Delete all flaregun workers */
-  async deleteAll(): Promise<number> {
+  async deleteAll(
+    onProgress?: (current: number, total: number, name: string) => void,
+  ): Promise<number> {
     const workers = await this.listWorkers();
-    for (const w of workers) {
-      await this.deleteWorker(w.name);
+    for (let i = 0; i < workers.length; i++) {
+      onProgress?.(i + 1, workers.length, workers[i].name);
+      await this.deleteWorker(workers[i].name);
     }
     return workers.length;
   }

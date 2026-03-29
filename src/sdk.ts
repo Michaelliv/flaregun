@@ -36,24 +36,32 @@ export class FlareGun {
   }
 
   /** Deploy N proxy workers (additive — adds to existing) */
-  async up(count: number): Promise<WorkerInfo[]> {
-    this.workers = await this.client.deployMany(count);
+  async up(
+    count: number,
+    onProgress?: (current: number, total: number, name: string) => void,
+  ): Promise<WorkerInfo[]> {
+    this.workers = await this.client.deployMany(count, onProgress);
     this.rotator = createRotator(this.strategy, this.workers);
     this.cacheWorkers();
     return this.workers;
   }
 
   /** Scale to exactly N workers */
-  async scale(target: number): Promise<WorkerInfo[]> {
-    this.workers = await this.client.scaleTo(target);
+  async scale(
+    target: number,
+    onProgress?: (current: number, total: number, name: string) => void,
+  ): Promise<WorkerInfo[]> {
+    this.workers = await this.client.scaleTo(target, onProgress);
     this.rotator = createRotator(this.strategy, this.workers);
     this.cacheWorkers();
     return this.workers;
   }
 
   /** Teardown all flaregun workers */
-  async down(): Promise<number> {
-    const removed = await this.client.deleteAll();
+  async down(
+    onProgress?: (current: number, total: number, name: string) => void,
+  ): Promise<number> {
+    const removed = await this.client.deleteAll(onProgress);
     this.workers = [];
     this.rotator = null;
     this.cacheWorkers();

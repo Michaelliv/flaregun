@@ -68,6 +68,11 @@ export async function init(
         console.log(
           `  ${cmd("flaregun init --token xxx --account yyy")}`,
         );
+        console.log();
+        hint("Tip: to avoid leaking the token in shell history, prefix with a space:");
+        console.log(
+          `  ${cmd(" flaregun init --token xxx --account yyy")}`,
+        );
       } else {
         hint("Ready! Deploy workers:");
         console.log(`  ${cmd("flaregun up 5")}`);

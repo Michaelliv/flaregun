@@ -20,6 +20,12 @@ program
   .version(`flaregun ${version}`, "-v, --version")
   .option("--json", "Output as JSON")
   .option("-q, --quiet", "Suppress output")
+  .option("--no-color", "Disable color output")
+  .hook("preAction", (thisCommand) => {
+    if (thisCommand.opts().color === false) {
+      process.env.NO_COLOR = "1";
+    }
+  })
   .addHelpText(
     "after",
     `
@@ -56,9 +62,10 @@ program
 program
   .command("down")
   .description("Teardown all proxy workers")
-  .action(async (_opts, cmd) => {
+  .option("-f, --force", "Skip confirmation prompt")
+  .action(async (opts, cmd) => {
     const globals = cmd.optsWithGlobals();
-    await down({ json: globals.json, quiet: globals.quiet });
+    await down({ force: opts.force, json: globals.json, quiet: globals.quiet });
   });
 
 program

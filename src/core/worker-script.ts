@@ -36,7 +36,7 @@ export default {
       });
 
       const responseHeaders = new Headers(resp.headers);
-      responseHeaders.set("X-Flaregun-Worker", "${workerName}");
+      responseHeaders.set("X-Flaregun-Worker", "WORKER_NAME_PLACEHOLDER");
 
       return new Response(resp.body, {
         status: resp.status,
@@ -58,5 +58,5 @@ export default {
  * Returns the worker script with the worker name baked in for tracing.
  */
 export function getWorkerScriptForName(name: string): string {
-  return getWorkerScript().replace("${workerName}", name);
+  return getWorkerScript().replace("WORKER_NAME_PLACEHOLDER", name);
 }

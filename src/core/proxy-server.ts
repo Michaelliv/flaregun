@@ -8,7 +8,8 @@
  */
 
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from "node:http";
-import { connect, type Socket } from "node:net";
+import { connect } from "node:net";
+import type { Duplex } from "node:stream";
 import type { WorkerInfo, ProxyRequest, ServeOptions } from "../types.js";
 import { createRotator, type Rotator } from "./rotation.js";
 
@@ -108,7 +109,7 @@ export class ProxyServer {
   /** Handle CONNECT tunneling for HTTPS */
   private handleConnect(
     req: IncomingMessage,
-    clientSocket: Socket,
+    clientSocket: Duplex,
     _head: Buffer,
   ): void {
     // For CONNECT, we can't easily route through Workers (they don't support raw TCP).

@@ -26,6 +26,11 @@ export default {
 
       const headers = new Headers(request.headers);
       headers.delete("X-Target-URL");
+      headers.delete("X-Forwarded-For");
+      headers.delete("CF-Connecting-IP");
+      headers.delete("CF-IPCountry");
+      headers.delete("CF-Ray");
+      headers.delete("CF-Visitor");
       headers.set("Host", targetUrl.hostname);
 
       const resp = await fetch(targetUrl.toString(), {

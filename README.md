@@ -99,23 +99,54 @@ await fg.down();
 
 ## Configuration
 
-Credentials resolve in order: explicit config → env vars → `.flaregun/config.json`.
+Credentials resolve in order: explicit config → env vars → project `.flaregun/config.json` → global `~/.flaregun/config.json`.
 
 ```bash
-# Env vars
+# One-time setup (saved to ~/.flaregun/)
+flaregun init --token xxx --account yyy
+
+# Or use env vars
 export CLOUDFLARE_API_TOKEN=your_token
 export CLOUDFLARE_ACCOUNT_ID=your_account_id
 
-# Or init with credentials
-flaregun init --token xxx --account yyy
+# Or project-level config
+flaregun init --global false
 ```
 
 ## Cloudflare Setup
 
-1. Create a [Cloudflare account](https://dash.cloudflare.com/sign-up) (free)
-2. Go to **My Profile → API Tokens → Create Token**
-3. Use the **Edit Cloudflare Workers** template
-4. Copy the token and your Account ID (visible in the dashboard URL)
+### 1. Create a free account
+
+Sign up at [dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up).
+
+### 2. Create an API token
+
+1. Go to **My Profile → API Tokens** ([direct link](https://dash.cloudflare.com/profile/api-tokens))
+2. Click **Create Token**
+3. Find **Edit Cloudflare Workers** and click **Use template**
+4. Under **Account Resources**, select your account from the dropdown
+5. Leave everything else as-is
+6. Click **Continue to summary → Create Token**
+7. Copy the token
+
+### 3. Get your Account ID
+
+Your Account ID is in the Cloudflare dashboard URL: `dash.cloudflare.com/<ACCOUNT_ID>/...`
+
+Or find it on the **Workers & Pages** overview page in the right sidebar.
+
+### 4. Configure flaregun
+
+```bash
+flaregun init --token cfut_xxx --account abc123
+```
+
+This saves credentials to `~/.flaregun/config.json` — works globally across all projects. You're ready:
+
+```bash
+flaregun up 5
+flaregun fire https://httpbin.org/ip
+```
 
 ### Limits
 

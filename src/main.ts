@@ -36,12 +36,13 @@ https://github.com/Michaelliv/flaregun`,
 
 program
   .command("init")
-  .description("Create .flaregun/ config directory")
+  .description("Configure flaregun credentials")
   .option("-t, --token <token>", "Cloudflare API token")
   .option("-a, --account <id>", "Cloudflare account ID")
+  .option("-g, --global", "Store in ~/.flaregun/ (default when setting credentials)")
   .action(async (opts, cmd) => {
     const globals = cmd.optsWithGlobals();
-    await init({ token: opts.token, account: opts.account, json: globals.json, quiet: globals.quiet });
+    await init({ token: opts.token, account: opts.account, global: opts.global, json: globals.json, quiet: globals.quiet });
   });
 
 program

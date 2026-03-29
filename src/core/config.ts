@@ -1,9 +1,13 @@
 /**
  * Config resolution.
- * Priority: explicit config > env vars > config file.
+ * Priority: explicit config > env vars > project config > global config.
+ *
+ * Global config: ~/.flaregun/config.json  (credentials, shared across projects)
+ * Project config: .flaregun/config.json   (project-specific overrides, worker cache)
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import type { FlareGunConfig } from "../types.js";
 
@@ -17,12 +21,20 @@ export interface ConfigFile {
   workers?: string[];
 }
 
-/** Walk up from cwd to find .flaregun/ */
-export function findConfigDir(): string | null {
+/** ~/.flaregun/ */
+export function globalConfigDir(): string {
+  return join(homedir(), CONFIG_DIR);
+}
+
+/** Walk up from cwd to find .flaregun/ (project-level) */
+export function findProjectConfigDir(): string | null {
+  const globalDir = globalConfigDir();
   let dir = process.cwd();
   while (true) {
-    if (existsSync(join(dir, CONFIG_DIR))) {
-      return join(dir, CONFIG_DIR);
+    const candidate = join(dir, CONFIG_DIR);
+    // Skip if it's the global dir
+    if (existsSync(candidate) && candidate !== globalDir) {
+      return candidate;
     }
     const parent = join(dir, "..");
     if (parent === dir) return null;
@@ -30,15 +42,30 @@ export function findConfigDir(): string | null {
   }
 }
 
+/** Find config dir — project first, then global */
+export function findConfigDir(): string | null {
+  return findProjectConfigDir() ?? (existsSync(globalConfigDir()) ? globalConfigDir() : null);
+}
+
 export function requireConfigDir(): string {
   const dir = findConfigDir();
   if (!dir) {
-    throw new Error("Not a flaregun project. Run: flaregun init");
+    throw new Error("Not configured. Run: flaregun init");
   }
   return dir;
 }
 
-export function initConfigDir(): string {
+/** Init global config at ~/.flaregun/ */
+export function initGlobalConfigDir(): string {
+  const dir = globalConfigDir();
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
+
+/** Init project config at ./.flaregun/ */
+export function initProjectConfigDir(): string {
   const dir = join(process.cwd(), CONFIG_DIR);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
@@ -66,8 +93,13 @@ export function writeConfigFile(
 export function resolveConfig(
   explicit?: Partial<FlareGunConfig>,
 ): FlareGunConfig {
-  const configDir = findConfigDir();
-  const file = configDir ? readConfigFile(configDir) : {};
+  const projectDir = findProjectConfigDir();
+  const globalDir = existsSync(globalConfigDir()) ? globalConfigDir() : null;
+
+  // Merge: global < project (project overrides global)
+  const globalFile = globalDir ? readConfigFile(globalDir) : {};
+  const projectFile = projectDir ? readConfigFile(projectDir) : {};
+  const file = { ...globalFile, ...projectFile };
 
   const apiToken =
     explicit?.apiToken ??

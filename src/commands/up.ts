@@ -3,14 +3,13 @@ import { Spinner } from "../utils/progress.js";
 import type { OutputOptions } from "../utils/output.js";
 import { output, bullet, dim, header, error } from "../utils/output.js";
 
-export async function up(
-  count: number,
-  options: OutputOptions,
-): Promise<void> {
+export async function up(count: number, options: OutputOptions): Promise<void> {
   try {
     const fg = new FlareGun();
 
-    const spinner = options.quiet ? null : new Spinner(`Deploying ${count} workers...`);
+    const spinner = options.quiet
+      ? null
+      : new Spinner(`Deploying ${count} workers...`);
     spinner?.start();
 
     const progress = (current: number, total: number, name: string) => {

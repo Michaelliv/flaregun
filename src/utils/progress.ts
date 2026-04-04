@@ -17,7 +17,9 @@ export class Spinner {
       return;
     }
     this.interval = setInterval(() => {
-      const spinner = chalk.cyan(SPINNER_FRAMES[this.frame % SPINNER_FRAMES.length]);
+      const spinner = chalk.cyan(
+        SPINNER_FRAMES[this.frame % SPINNER_FRAMES.length],
+      );
       process.stderr.write(`\r${spinner} ${this.message}`);
       this.frame++;
     }, 80);
@@ -45,6 +47,10 @@ export class Spinner {
 }
 
 /** Simple progress counter for deploying workers */
-export function deployProgress(current: number, total: number, name: string): string {
+export function deployProgress(
+  current: number,
+  total: number,
+  name: string,
+): string {
   return `Deploying worker ${current}/${total}: ${name}`;
 }

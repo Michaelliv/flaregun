@@ -108,9 +108,10 @@ export class CloudflareClient {
 
   /** List all flaregun workers on the account */
   async listWorkers(): Promise<WorkerInfo[]> {
-    const resp = await this.request<
-      { id: string; created_on: string; modified_on: string }[]
-    >("/workers/scripts");
+    const resp =
+      await this.request<
+        { id: string; created_on: string; modified_on: string }[]
+      >("/workers/scripts");
 
     // Get subdomain for URL construction
     const subdomainResp = await this.request<{ subdomain: string }>(

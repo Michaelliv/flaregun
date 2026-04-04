@@ -42,7 +42,9 @@ export async function down(
       }
     }
 
-    const spinner = options.quiet ? null : new Spinner(`Removing ${workers.length} workers...`);
+    const spinner = options.quiet
+      ? null
+      : new Spinner(`Removing ${workers.length} workers...`);
     spinner?.start();
 
     const removed = await fg.down((current, total, name) => {
@@ -53,7 +55,8 @@ export async function down(
 
     output(options, {
       json: () => ({ removed, success: true }),
-      human: () => success(`Removed ${removed} worker${removed === 1 ? "" : "s"}`),
+      human: () =>
+        success(`Removed ${removed} worker${removed === 1 ? "" : "s"}`),
     });
   } catch (err) {
     error((err as Error).message);

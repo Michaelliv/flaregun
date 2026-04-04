@@ -5,7 +5,12 @@
  */
 
 import { CloudflareClient } from "./core/client.js";
-import { resolveConfig, findConfigDir, saveWorkerCache, loadWorkerCache } from "./core/config.js";
+import {
+  resolveConfig,
+  findConfigDir,
+  saveWorkerCache,
+  loadWorkerCache,
+} from "./core/config.js";
 import { createRotator, type Rotator } from "./core/rotation.js";
 import { ProxyServer } from "./core/proxy-server.js";
 import type {
@@ -91,13 +96,11 @@ export class FlareGun {
    * @example
    * const res = await fg.fetch("https://httpbin.org/ip");
    */
-  async fetch(
-    url: string,
-    options?: FetchOptions,
-  ): Promise<Response> {
-    const worker = options?.workerIndex !== undefined
-      ? this.workers[options.workerIndex]
-      : this.next();
+  async fetch(url: string, options?: FetchOptions): Promise<Response> {
+    const worker =
+      options?.workerIndex !== undefined
+        ? this.workers[options.workerIndex]
+        : this.next();
 
     if (!worker) {
       throw new Error("No workers available");
@@ -175,7 +178,10 @@ export class FlareGun {
   private cacheWorkers(): void {
     const configDir = findConfigDir();
     if (configDir) {
-      saveWorkerCache(configDir, this.workers.map((w) => w.url));
+      saveWorkerCache(
+        configDir,
+        this.workers.map((w) => w.url),
+      );
     }
   }
 }

@@ -16,7 +16,7 @@ export async function init(
     global?: boolean;
   },
 ): Promise<void> {
-  const isGlobal = options.global ?? (!!(options.token || options.account));
+  const isGlobal = options.global ?? !!(options.token || options.account);
   const dir = isGlobal ? initGlobalConfigDir() : initProjectConfigDir();
 
   const apiToken =
@@ -65,14 +65,12 @@ export async function init(
       if (!apiToken || !accountId) {
         console.log();
         hint("Set your Cloudflare credentials:");
-        console.log(
-          `  ${cmd("flaregun init --token xxx --account yyy")}`,
-        );
+        console.log(`  ${cmd("flaregun init --token xxx --account yyy")}`);
         console.log();
-        hint("Tip: to avoid leaking the token in shell history, prefix with a space:");
-        console.log(
-          `  ${cmd(" flaregun init --token xxx --account yyy")}`,
+        hint(
+          "Tip: to avoid leaking the token in shell history, prefix with a space:",
         );
+        console.log(`  ${cmd(" flaregun init --token xxx --account yyy")}`);
       } else {
         hint("Ready! Deploy workers:");
         console.log(`  ${cmd("flaregun up 5")}`);

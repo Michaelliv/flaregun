@@ -1,12 +1,74 @@
 /**
  * The JavaScript source deployed to each Cloudflare Worker.
- * Thin proxy: extracts target URL, forwards request, relays response.
+ * Two modes:
+ * 1. HTTP fetch proxy: extracts target URL, forwards request, relays response.
+ * 2. WebSocket tunnel: accepts WS upgrade, opens TCP connection to target
+ *    via cloudflare:sockets, pipes bytes bidirectionally. Used for HTTPS CONNECT.
  */
 export function getWorkerScript(): string {
   return `
+import { connect } from "cloudflare:sockets";
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
+
+    // WebSocket tunnel for CONNECT/HTTPS proxying
+    if (url.pathname === "/tunnel" && request.headers.get("Upgrade") === "websocket") {
+      const connectHost = request.headers.get("X-Connect-Host");
+      if (!connectHost) {
+        return new Response(JSON.stringify({ error: "Missing X-Connect-Host header" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      const [host, port] = connectHost.split(":");
+      const pair = new WebSocketPair();
+      const [client, server] = Object.values(pair);
+
+      server.accept();
+
+      // Connect to target via cloudflare:sockets
+      const targetSocket = connect({ hostname: host, port: Number(port) || 443 });
+
+      // Target -> Client: read from TCP socket, send via WebSocket
+      const reader = targetSocket.readable.getReader();
+      (async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            server.send(value);
+          }
+        } catch { /* target closed */ } finally {
+          server.close();
+        }
+      })();
+
+      // Client -> Target: receive from WebSocket, write to TCP socket
+      const writer = targetSocket.writable.getWriter();
+      server.addEventListener("message", async (event) => {
+        try {
+          const data = event.data;
+          if (data instanceof ArrayBuffer) {
+            await writer.write(new Uint8Array(data));
+          } else {
+            await writer.write(new TextEncoder().encode(data));
+          }
+        } catch { /* target write failed */ 
+          server.close();
+        }
+      });
+
+      server.addEventListener("close", async () => {
+        try { await writer.close(); } catch { /* already closed */ }
+      });
+
+      return new Response(null, { status: 101, webSocket: client });
+    }
+
+    // HTTP fetch proxy
     const target = request.headers.get("X-Target-URL") || url.searchParams.get("url");
 
     if (!target) {

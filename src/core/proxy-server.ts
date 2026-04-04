@@ -7,8 +7,12 @@
  *   curl -x http://localhost:8080 https://httpbin.org/ip
  */
 
-import { createServer, type Server, type IncomingMessage, type ServerResponse } from "node:http";
-import { connect } from "node:net";
+import {
+  createServer,
+  type Server,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import type { Duplex } from "node:stream";
 import type { WorkerInfo, ProxyRequest, ServeOptions } from "../types.js";
 import { createRotator, type Rotator } from "./rotation.js";
@@ -23,10 +27,7 @@ export class ProxyServer {
     private workers: WorkerInfo[],
     private options: ServeOptions = {},
   ) {
-    this.rotator = createRotator(
-      options.strategy ?? "round-robin",
-      workers,
-    );
+    this.rotator = createRotator(options.strategy ?? "round-robin", workers);
 
     this.server = createServer((req, res) => this.handleRequest(req, res));
 
@@ -57,7 +58,8 @@ export class ProxyServer {
       for await (const chunk of req) {
         bodyChunks.push(chunk as Buffer);
       }
-      const body = bodyChunks.length > 0 ? Buffer.concat(bodyChunks) : undefined;
+      const body =
+        bodyChunks.length > 0 ? Buffer.concat(bodyChunks) : undefined;
 
       // Forward through worker
       const workerUrl = `${worker.url}/?url=${encodeURIComponent(target)}`;
@@ -106,26 +108,71 @@ export class ProxyServer {
     }
   }
 
-  /** Handle CONNECT tunneling for HTTPS */
+  /**
+   * Handle CONNECT tunneling for HTTPS.
+   * Opens a WebSocket to a CF Worker, which uses cloudflare:sockets to
+   * connect to the target. Bytes flow: client ↔ proxy ↔ worker(WS) ↔ target(TCP).
+   * The target sees the worker's Cloudflare IP, not the client's.
+   */
   private handleConnect(
     req: IncomingMessage,
     clientSocket: Duplex,
     _head: Buffer,
   ): void {
-    // For CONNECT, we can't easily route through Workers (they don't support raw TCP).
-    // Instead we forward through the worker via a rewritten HTTPS request.
-    // For now: direct CONNECT passthrough (no IP rotation for CONNECT tunnels).
-    const [host, port] = (req.url ?? "").split(":");
-    const serverSocket = connect(Number(port) || 443, host, () => {
-      clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
-      serverSocket.pipe(clientSocket);
-      clientSocket.pipe(serverSocket);
-    });
+    const connectTarget = req.url ?? "";
+    const worker = this.rotator.next();
+    const start = Date.now();
 
-    serverSocket.on("error", () => {
+    const workerUrl = new URL(worker.url);
+    const wsProtocol = workerUrl.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${wsProtocol}://${workerUrl.host}/tunnel`;
+
+    try {
+      // Bun's WebSocket supports custom headers; cast needed for standard typings
+      const ws = new WebSocket(wsUrl, {
+        headers: { "X-Connect-Host": connectTarget },
+      } as any);
+      ws.binaryType = "arraybuffer";
+
+      ws.addEventListener("open", () => {
+        // Tunnel established through worker — tell the client
+        clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
+
+        // Client → Worker (via WebSocket)
+        clientSocket.on("data", (chunk) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(chunk);
+          }
+        });
+        clientSocket.on("end", () => ws.close());
+        clientSocket.on("error", () => ws.close());
+
+        this.trackRequest(worker, connectTarget, 200, Date.now() - start);
+      });
+
+      // Worker → Client
+      ws.addEventListener("message", (event) => {
+        const data = event.data;
+        if (data instanceof ArrayBuffer) {
+          clientSocket.write(Buffer.from(data));
+        } else {
+          clientSocket.write(data);
+        }
+      });
+
+      ws.addEventListener("close", () => clientSocket.end());
+      ws.addEventListener("error", () => {
+        this.rotator.markError(worker);
+        clientSocket.write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+        clientSocket.end();
+        this.trackRequest(worker, connectTarget, 502, Date.now() - start);
+      });
+    } catch {
+      this.rotator.markError(worker);
       clientSocket.write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
       clientSocket.end();
-    });
+      this.trackRequest(worker, connectTarget, 502, Date.now() - start);
+    }
   }
 
   private trackRequest(

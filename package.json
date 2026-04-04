@@ -1,6 +1,6 @@
 {
   "name": "@miclivs/flaregun",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Rotating proxy network on Cloudflare Workers. Deploy, rotate, fire.",
   "type": "module",
   "main": "dist/index.js",

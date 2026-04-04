@@ -44,7 +44,10 @@ export function findProjectConfigDir(): string | null {
 
 /** Find config dir — project first, then global */
 export function findConfigDir(): string | null {
-  return findProjectConfigDir() ?? (existsSync(globalConfigDir()) ? globalConfigDir() : null);
+  return (
+    findProjectConfigDir() ??
+    (existsSync(globalConfigDir()) ? globalConfigDir() : null)
+  );
 }
 
 export function requireConfigDir(): string {
@@ -79,10 +82,7 @@ export function readConfigFile(configDir: string): ConfigFile {
   return JSON.parse(readFileSync(filePath, "utf-8"));
 }
 
-export function writeConfigFile(
-  configDir: string,
-  config: ConfigFile,
-): void {
+export function writeConfigFile(configDir: string, config: ConfigFile): void {
   writeFileSync(
     join(configDir, CONFIG_FILE),
     `${JSON.stringify(config, null, 2)}\n`,
@@ -130,10 +130,7 @@ export function resolveConfig(
 }
 
 /** Save worker URLs to config for offline use */
-export function saveWorkerCache(
-  configDir: string,
-  workers: string[],
-): void {
+export function saveWorkerCache(configDir: string, workers: string[]): void {
   const config = readConfigFile(configDir);
   config.workers = workers;
   writeConfigFile(configDir, config);

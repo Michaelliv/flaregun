@@ -52,17 +52,13 @@ export async function serve(
       );
     } else {
       console.log();
-      success(
-        `Proxy server listening on ${bold(`http://localhost:${port}`)}`,
-      );
+      success(`Proxy server listening on ${bold(`http://localhost:${port}`)}`);
       info(
         `Rotating across ${bold(String(workers.length))} workers (${strategy})`,
       );
       console.log();
       console.log(
-        dim(
-          `  curl --proxy http://localhost:${port} https://httpbin.org/ip`,
-        ),
+        dim(`  curl --proxy http://localhost:${port} https://httpbin.org/ip`),
       );
       console.log();
     }

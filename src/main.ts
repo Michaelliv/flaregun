@@ -2,12 +2,12 @@
 
 import { createRequire } from "node:module";
 import { Command } from "commander";
-import { init } from "./commands/init.js";
-import { up } from "./commands/up.js";
 import { down } from "./commands/down.js";
+import { fire } from "./commands/fire.js";
+import { init } from "./commands/init.js";
 import { ls } from "./commands/ls.js";
 import { serve } from "./commands/serve.js";
-import { fire } from "./commands/fire.js";
+import { up } from "./commands/up.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -93,6 +93,11 @@ program
   .description("Start a local HTTP proxy server")
   .option("-p, --port <port>", "Port to listen on", "8080")
   .option(
+    "-H, --host <host>",
+    "Host to bind to (default: 127.0.0.1)",
+    "127.0.0.1",
+  )
+  .option(
     "-s, --strategy <strategy>",
     "Rotation strategy: round-robin, random, adaptive",
     "round-robin",
@@ -101,6 +106,7 @@ program
     const globals = cmd.optsWithGlobals();
     await serve({
       port: Number.parseInt(opts.port, 10),
+      host: opts.host,
       strategy: opts.strategy,
       json: globals.json,
       quiet: globals.quiet,

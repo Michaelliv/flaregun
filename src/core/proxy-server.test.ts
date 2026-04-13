@@ -10,17 +10,17 @@
  */
 
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
   afterAll,
+  beforeAll,
   beforeEach,
+  describe,
+  expect,
+  it,
 } from "bun:test";
-import { createServer, type Server, request as httpRequest } from "node:http";
+import { createServer, request as httpRequest, type Server } from "node:http";
 import { connect, type Socket } from "node:net";
-import { ProxyServer } from "./proxy-server.js";
 import type { WorkerInfo } from "../types.js";
+import { ProxyServer } from "./proxy-server.js";
 
 let targetServer: Server;
 let workerBunServer: ReturnType<typeof Bun.serve>;

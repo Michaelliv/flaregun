@@ -22,15 +22,15 @@
  * ```
  */
 
-export { FlareGun } from "./sdk.js";
-export { createRotator } from "./core/rotation.js";
 export { ProxyServer } from "./core/proxy-server.js";
+export { createRotator } from "./core/rotation.js";
+export { FlareGun } from "./sdk.js";
 export type {
+  FetchOptions,
   FlareGunConfig,
-  WorkerInfo,
-  ProxyRequest,
   FlareGunStats,
+  ProxyRequest,
   RotationStrategy,
   ServeOptions,
-  FetchOptions,
+  WorkerInfo,
 } from "./types.js";

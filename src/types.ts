@@ -32,6 +32,8 @@ export type RotationStrategy = "random" | "round-robin" | "adaptive";
 
 export interface ServeOptions {
   port?: number;
+  /** Host to bind to (default: 127.0.0.1) */
+  host?: string;
   strategy?: RotationStrategy;
   onRequest?: (req: ProxyRequest) => void;
 }

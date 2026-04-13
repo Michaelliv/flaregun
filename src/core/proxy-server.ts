@@ -9,12 +9,12 @@
 
 import {
   createServer,
-  type Server,
   type IncomingMessage,
+  type Server,
   type ServerResponse,
 } from "node:http";
 import type { Duplex } from "node:stream";
-import type { WorkerInfo, ProxyRequest, ServeOptions } from "../types.js";
+import type { ProxyRequest, ServeOptions, WorkerInfo } from "../types.js";
 import { createRotator, type Rotator } from "./rotation.js";
 
 export class ProxyServer {
@@ -198,9 +198,12 @@ export class ProxyServer {
     this.options.onRequest?.(proxyReq);
   }
 
-  async start(port: number = 8080): Promise<Server> {
+  async start(
+    port: number = 8080,
+    host: string = "127.0.0.1",
+  ): Promise<Server> {
     return new Promise((resolve) => {
-      this.server.listen(port, () => resolve(this.server));
+      this.server.listen(port, host, () => resolve(this.server));
     });
   }
 

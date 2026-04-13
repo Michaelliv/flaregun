@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { FlareGun } from "../sdk.js";
 import type { OutputOptions } from "../utils/output.js";
-import { output, dim, error } from "../utils/output.js";
+import { dim, error, output } from "../utils/output.js";
 
 /**
  * Fire a single request through the proxy. Quick test/debug command.

@@ -1,8 +1,8 @@
 import { createInterface } from "node:readline";
 import { FlareGun } from "../sdk.js";
-import { Spinner } from "../utils/progress.js";
 import type { OutputOptions } from "../utils/output.js";
-import { output, success, warn, error, bold } from "../utils/output.js";
+import { bold, error, output, success, warn } from "../utils/output.js";
+import { Spinner } from "../utils/progress.js";
 
 async function confirm(message: string): Promise<boolean> {
   if (!process.stdin.isTTY) return true;

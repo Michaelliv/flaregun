@@ -1,7 +1,7 @@
 import { FlareGun } from "../sdk.js";
-import { Spinner } from "../utils/progress.js";
 import type { OutputOptions } from "../utils/output.js";
-import { output, bullet, dim, header, error } from "../utils/output.js";
+import { bullet, dim, error, header, output } from "../utils/output.js";
+import { Spinner } from "../utils/progress.js";
 
 export async function up(count: number, options: OutputOptions): Promise<void> {
   try {

@@ -1,6 +1,6 @@
 import { FlareGun } from "../sdk.js";
 import type { OutputOptions } from "../utils/output.js";
-import { output, bullet, dim, header, warn, error } from "../utils/output.js";
+import { bullet, dim, error, header, output, warn } from "../utils/output.js";
 
 export async function ls(options: OutputOptions): Promise<void> {
   try {

@@ -6,17 +6,17 @@
 
 import { CloudflareClient } from "./core/client.js";
 import {
-  resolveConfig,
   findConfigDir,
-  saveWorkerCache,
   loadWorkerCache,
+  resolveConfig,
+  saveWorkerCache,
 } from "./core/config.js";
-import { createRotator, type Rotator } from "./core/rotation.js";
 import { ProxyServer } from "./core/proxy-server.js";
+import { createRotator, type Rotator } from "./core/rotation.js";
 import type {
+  FetchOptions,
   FlareGunConfig,
   FlareGunStats,
-  FetchOptions,
   RotationStrategy,
   ServeOptions,
   WorkerInfo,
@@ -151,7 +151,10 @@ export class FlareGun {
       ...options,
     });
 
-    await this.proxyServer.start(options?.port ?? 8080);
+    await this.proxyServer.start(
+      options?.port ?? 8080,
+      options?.host ?? "127.0.0.1",
+    );
     return this.proxyServer;
   }
 

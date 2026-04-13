@@ -1,13 +1,13 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  globalConfigDir,
   initGlobalConfigDir,
   initProjectConfigDir,
   writeConfigFile,
-  globalConfigDir,
 } from "../core/config.js";
 import type { OutputOptions } from "../utils/output.js";
-import { output, success, hint, cmd } from "../utils/output.js";
+import { cmd, hint, output, success } from "../utils/output.js";
 
 export async function init(
   options: OutputOptions & {

@@ -2,15 +2,17 @@ import chalk from "chalk";
 import { FlareGun } from "../sdk.js";
 import type { RotationStrategy } from "../types.js";
 import type { OutputOptions } from "../utils/output.js";
-import { success, info, dim, error, bold } from "../utils/output.js";
+import { bold, dim, error, info, success } from "../utils/output.js";
 
 export async function serve(
   options: OutputOptions & {
     port?: number;
+    host?: string;
     strategy?: RotationStrategy;
   },
 ): Promise<void> {
   const port = options.port ?? 8080;
+  const host = options.host ?? "127.0.0.1";
   const strategy = options.strategy ?? "round-robin";
 
   try {
@@ -24,6 +26,7 @@ export async function serve(
 
     const server = await fg.serve({
       port,
+      host,
       strategy,
       onRequest: (req) => {
         if (!options.quiet) {
@@ -47,12 +50,18 @@ export async function serve(
           port,
           strategy,
           workers: workers.length,
+          host,
           status: "listening",
         }),
       );
     } else {
       console.log();
-      success(`Proxy server listening on ${bold(`http://localhost:${port}`)}`);
+      success(`Proxy server listening on ${bold(`http://${host}:${port}`)}`);
+      if (host === "127.0.0.1") {
+        info(
+          "Bound to localhost only. Use --host 0.0.0.0 to expose on all interfaces.",
+        );
+      }
       info(
         `Rotating across ${bold(String(workers.length))} workers (${strategy})`,
       );
